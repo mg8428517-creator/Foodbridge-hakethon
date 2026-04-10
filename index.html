@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodBridge – Login & Order Food</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════
+     AUTH WALL — shown before login
+══════════════════════════════════ -->
+  <div id="auth-wall">
+    <div class="auth-box">
+      <div class="auth-logo">Food<span>Bridge</span></div>
+      <div class="auth-tagline">Stop Waste · Share Plate · Smart Orders</div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="authTab('login',this)">🔑 Login</button>
+        <button class="auth-tab" onclick="authTab('signup',this)">✨ Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form show" id="form-login">
+        <div>
+          <label>Email Address</label>
+          <input type="email" id="li-email" placeholder="you@email.com" autocomplete="email" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div id="login-error" class="auth-error"></div>
+        <button class="auth-btn" id="login-btn" onclick="doLogin()">🔑 Login to FoodBridge</button>
+        <div class="auth-divider">or</div>
+        <p style="text-align:center;font-size:.8rem;color:var(--muted)">No account? <a href="#"
+            style="color:var(--accent);text-decoration:none"
+            onclick="authTab('signup',document.querySelectorAll('.auth-tab')[1])">Create one free →</a></p>
+        <div id="demo-notice"
+          style="background:rgba(240,136,62,.1);border:1px solid rgba(240,136,62,.3);border-radius:8px;padding:10px 13px;font-size:.76rem;color:var(--order);display:none">
+          ⚡ <strong>Demo Mode:</strong> Supabase not configured. <a href="#" style="color:var(--order)"
+            onclick="demoLogin()">Continue as Guest →</a>
+        </div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div class="auth-form" id="form-signup">
+        <div>
+          <label>Full Name *</label>
+          <input type="text" id="su-name" placeholder="Ravi Kumar" />
+        </div>
+        <div>
+          <label>Email Address *</label>
+          <input type="email" id="su-email" placeholder="you@email.com" autocomplete="email" />
+        </div>
+        <div>
+          <label>Phone *</label>
+          <input type="tel" id="su-phone" placeholder="9876543210" />
+        </div>
+        <div>
+          <label>Password * (min 6 chars)</label>
+          <input type="password" id="su-pass" placeholder="Create password" autocomplete="new-password" />
+        </div>
+        <div>
+          <label>I want to… (choose your role)</label>
+          <div class="role-cards">
+            <div class="role-card selected" id="role-buyer" onclick="selectRole('buyer')">
+              <div class="ri">🛍️</div>
+              <div class="rl">Buy / Claim</div>
+              <div class="rd">Find & order food</div>
+            </div>
+            <div class="role-card" id="role-seller" onclick="selectRole('seller')">
+              <div class="ri">🏪</div>
+              <div class="rl">Sell / Donate</div>
+              <div class="rd">List surplus food</div>
+            </div>
+          </div>
+        </div>
+        <div id="su-address-wrap">
+          <label>Pickup Address / Area</label>
+          <input type="text" id="su-address" placeholder="Sector 4, Civil Lines, Delhi" />
+        </div>
+        <div id="su-upi-wrap" style="display:none">
+          <label>UPI ID (for receiving payments)</label>
+          <input type="text" id="su-upi" placeholder="yourname@upi" />
+        </div>
+        <div id="signup-error" class="auth-error"></div>
+        <div id="signup-success" class="auth-success"></div>
+        <button class="auth-btn" id="signup-btn" onclick="doSignup()">✨ Create My Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+     MAIN APP (shown after login)
+══════════════════════════════════ -->
+  <div id="app" style="display:none">
+
+    <header>
+      <div>
+        <div class="logo">Food<span>Bridge</span></div>
+        <div class="tagline">Stop Waste · Share Plate · Smart Orders</div>
+      </div>
+      <div class="header-right">
+        <div class="stats-bar">
+          <div class="stat">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">Listed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num" id="stat-free">0</div>
+            <div class="stat-label">Free</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num purple" id="stat-deals">0</div>
+            <div class="stat-label">Deals</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num orange" id="stat-orders">0</div>
+            <div class="stat-label">Orders</div>
+          </div>
+        </div>
+        <div class="user-chip" onclick="switchTab('profile',document.querySelectorAll('.tab-btn')[4])">
+          <div class="user-avatar" id="hdr-avatar">?</div>
+          <span class="user-name-label" id="hdr-name">User</span>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">Logout</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Food meets <em>community.</em><br />Waste meets <em class="sale">zero.</em></h1>
+      <p>Login, claim free food or order deals — every plate saved is a win for everyone.</p>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('browse',this)">🍱 Browse</button>
+        <button class="tab-btn sale-tab" onclick="switchTab('deals',this)">🏷️ Deals</button>
+        <button class="tab-btn order-tab" onclick="switchTab('orders',this)">📋 My Orders</button>
+        <button class="tab-btn" onclick="switchTab('add',this)">➕ Add Listing</button>
+        <button class="tab-btn" onclick="switchTab('profile',this)">👤 Profile</button>
+        <button class="tab-btn setup-tab" onclick="switchTab('setup',this)">⚙️ Setup</button>
+      </div>
+    </section>
+
+    <main>
+
+      <!-- ══ SETUP TAB ══ -->
+      <div id="tab-setup" class="section">
+
+        <!-- Step 0: Connect Supabase -->
+        <div class="config-inputs">
+          <h3>🔌 <span>Connect Your Supabase</span></h3>
+          <p style="color:var(--muted);font-size:.81rem;margin-bottom:12px">Paste your Project URL and Anon Key. Saved
+            in browser. Follow the steps below to get them.</p>
+          <div class="form-grid">
+            <div class="full"><label>Supabase Project URL</label><input type="text" id="cfg-url"
+                placeholder="https://xxxxxxxxxxx.supabase.co" /></div>
+            <div class="full"><label>Supabase Anon Key (public)</label><input type="text" id="cfg-key"
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." /></div>
+          </div>
+          <button class="btn" onclick="saveConfig()" style="margin-top:10px">💾 Save &amp; Test Connection</button>
+          <div id="connect-status" class="connect-status" style="display:none"></div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="setup-step">
+          <div class="setup-step-header">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Create a Free Supabase Account</div>
+              <div class="step-sub">Takes 2 minutes, completely free</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>Go to <b>supabase.com</b> and click <b>"Start your project"</b></li>
+              <li>Sign up using <b>GitHub</b> or <b>email</b> — both are free</li>
+              <li>After login, click <b>"New project"</b> (green button)</li>
+              <li>Enter <b>Project name:</b> <code
+                  style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)">foodbridge</code>
+              </li>
+              <li>Enter a <b>strong database password</b> (save it somewhere!)</li>
+              <li>Choose <b>Region</b> → pick <b>Southeast Asia (Singapore)</b> for India</li>
+              <li>Click <b>"Create new project"</b> → wait about 60 seconds ⏳</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="setup-step">
+          <div class="setup-step-header">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">Enable Email Auth</div>
+              <div class="step-sub">So users can sign up and log in</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>In your Supabase project, click <b>Authentication</b> in the left sidebar</li>
+              <li>Click <b>Providers</b></li>
+              <li>Find <b>Email</b> — it should already be enabled (green toggle)</li>
+              <li>Scroll down and <b>disable "Confirm email"</b> (turn it OFF for hackathon demo — so users don't need
+                to verify email)</li>
+              <li>Click <b>Save</b></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="setup-step">
+          <div class="setup-step-header">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">Run the SQL to Create Tables</div>
+              <div class="step-sub">Creates all 3 tables your app needs</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>In your project, click <b>SQL Editor</b> in the left sidebar</li>
+              <li>Click <b>"New query"</b> button</li>
+              <li>Copy the SQL below and paste it into the editor</li>
+              <li>Click the <b>green "Run" button</b> (or press <b>Ctrl + Enter</b>)</li>
+              <li>You should see <b>"Success. No rows returned"</b> ✅</li>
+            </ol>
+            <button class="copy-sql-btn" onclick="copySql()">📋 Copy SQL to Clipboard</button>
+            <pre class="sql" id="sql-block">-- ═══ TABLE 1: user_profiles (buyer/seller info) ═══
+CREATE TABLE user_profiles (
+  id          UUID REFERENCES auth.users(id) PRIMARY KEY,
+  name        TEXT NOT NULL,
+  phone       TEXT,
+  email       TEXT,
+  address     TEXT,
+  upi_id      TEXT,
+  role        TEXT DEFAULT 'buyer',
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ═══ TABLE 2: foods (listings) ═══
+CREATE TABLE foods (
+  id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id        UUID REFERENCES auth.users(id),
+  title          TEXT NOT NULL,
+  quantity       TEXT NOT NULL,
+  location       TEXT NOT NULL,
+  contact        TEXT,
+  description    TEXT,
+  category       TEXT DEFAULT 'other',
+  listing_type   TEXT DEFAULT 'free',
+  original_price NUMERIC(10,2),
+  discount_pct   INTEGER,
+  final_price    NUMERIC(10,2),
+  upi_id         TEXT,
+  expiry_time    TIMESTAMPTZ NOT NULL,
+  status         TEXT DEFAULT 'available',
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ═══ TABLE 3: orders ═══
+CREATE TABLE orders (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  food_id       UUID REFERENCES foods(id),
+  buyer_id      UUID REFERENCES auth.users(id),
+  buyer_name    TEXT NOT NULL,
+  buyer_phone   TEXT NOT NULL,
+  buyer_email   TEXT,
+  buyer_address TEXT,
+  quantity_req  TEXT,
+  message       TEXT,
+  order_type    TEXT DEFAULT 'claim',
+  amount        NUMERIC(10,2) DEFAULT 0,
+  status        TEXT DEFAULT 'pending',
+  ack_code      TEXT,
+  seller_note   TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ═══ Row Level Security (open for hackathon) ═══
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE foods          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders         ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read/write" ON user_profiles FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public read/write" ON foods          FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public read/write" ON orders         FOR ALL USING (true) WITH CHECK (true);</pre>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="setup-step">
+          <div class="setup-step-header">
+            <div class="step-num">4</div>
+            <div>
+              <div class="step-title">Get Your Project URL &amp; API Key</div>
+              <div class="step-sub">You'll paste these into the box at the top of this page</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>In your project, click <b>Project Settings</b> (gear icon ⚙️ at the bottom of left sidebar)</li>
+              <li>Click <b>API</b> in the settings menu</li>
+              <li>Under <b>"Project URL"</b> — copy the URL (looks like <code
+                  style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:#a5d6ff">https://abcdef.supabase.co</code>)
+              </li>
+              <li>Under <b>"Project API keys"</b> — copy the <b>anon / public</b> key (starts with <code
+                  style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:#a5d6ff">eyJ...</code>)</li>
+              <li>Paste both values in the <b>"Connect Your Supabase"</b> box at the top of this page</li>
+              <li>Click <b>💾 Save &amp; Test Connection</b></li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="setup-step">
+          <div class="setup-step-header">
+            <div class="step-num">5</div>
+            <div>
+              <div class="step-title">Test It!</div>
+              <div class="step-sub">Make sure everything is working</div>
+            </div>
+          </div>
+          <div class="step-body">
+            <ol>
+              <li>After saving, the app will say <b>"✅ Connected!"</b> at the top</li>
+              <li>Log out and create a new account using the signup form</li>
+              <li>Try adding a food listing from the <b>➕ Add Listing</b> tab</li>
+              <li>Open your <b>Supabase dashboard → Table Editor → foods</b> — you should see your listing appear there!
+              </li>
+              <li>Now try placing an order on Browse tab — check <b>Table Editor → orders</b></li>
+            </ol>
+            <div
+              style="margin-top:12px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.25);border-radius:8px;padding:11px 13px;font-size:.8rem;color:var(--accent)">
+              ✅ <strong>All done!</strong> Your app is now fully connected to a live database. Data persists across
+              sessions and devices.
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end setup -->
+
+      <!-- ══ PROFILE TAB ══ -->
+      <div id="tab-profile" class="section">
+        <div class="profile-card">
+          <h2>👤 My <span>Profile</span></h2>
+          <div class="profile-avatar-row" id="profile-display-row" style="display:none">
+            <div class="big-avatar" id="profile-big-avatar">?</div>
+            <div class="profile-info">
+              <h3 id="profile-name-show">—</h3>
+              <p id="profile-sub-show">—</p>
+            </div>
+          </div>
+          <p style="color:var(--muted);font-size:.81rem;margin-bottom:14px" id="profile-hint-txt">Your details auto-fill
+            every order form.</p>
+          <div class="form-grid">
+            <div class="full"><label>Full Name *</label><input type="text" id="p-name" placeholder="Ravi Kumar" /></div>
+            <div><label>Phone *</label><input type="tel" id="p-phone" placeholder="9876543210" /></div>
+            <div><label>Email</label><input type="email" id="p-email" placeholder="ravi@email.com" readonly
+                style="opacity:.6" /></div>
+            <div class="full"><label>Pickup Address</label><input type="text" id="p-address"
+                placeholder="Sector 4, Civil Lines, Delhi" /></div>
+            <div><label>UPI ID (seller)</label><input type="text" id="p-upi" placeholder="ravi@upi" /></div>
+            <div><label>Role</label>
+              <select id="p-role">
+                <option value="buyer">🛍️ Buyer / Claimer</option>
+                <option value="seller">🏪 Seller / Donor</option>
+                <option value="both">🤝 Both</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" id="save-profile-btn" onclick="saveProfile()">💾 Save Profile</button>
+        </div>
+      </div>
+
+      <!-- ══ ADD LISTING TAB ══ -->
+      <div id="tab-add" class="section">
+        <div id="setup-notice" class="notice warn" style="display:none"><strong>⚠️ Supabase not configured!</strong> Go
+          to ⚙️ Setup tab and connect first.</div>
+        <div class="form-card">
+          <h2>🍛 Add <span>Food Listing</span></h2>
+          <div class="type-toggle">
+            <button class="type-btn af" id="btn-free" onclick="setType('free')">🆓 Free / Donate</button>
+            <button class="type-btn" id="btn-sale" onclick="setType('sale')">🏷️ Discount Sale</button>
+          </div>
+          <div class="form-grid">
+            <div class="full"><label>Food Title *</label><input type="text" id="f-title"
+                placeholder="e.g. Leftover Biryani, Fresh Rotis" /></div>
+            <div><label>Quantity *</label><input type="text" id="f-qty" placeholder="5 plates, 2 kg" /></div>
+            <div><label>Category</label>
+              <select id="f-cat">
+                <option value="cooked">🍲 Cooked Meal</option>
+                <option value="raw">🥦 Raw / Groceries</option>
+                <option value="baked">🍞 Baked Goods</option>
+                <option value="fruits">🍎 Fruits / Veg</option>
+                <option value="packaged">📦 Packaged</option>
+                <option value="other">🥡 Other</option>
+              </select>
+            </div>
+            <div class="full"><label>Pickup Location *</label><input type="text" id="f-loc"
+                placeholder="Sharma Restaurant, MG Road, Delhi" /></div>
+            <div><label>Expires At *</label><input type="datetime-local" id="f-expiry" /></div>
+            <div><label>Contact (Name / Phone)</label><input type="text" id="f-contact"
+                placeholder="Auto-filled from profile" /></div>
+            <div class="full"><label>Description</label><textarea id="f-desc"
+                placeholder="Allergies, packaging notes..."></textarea></div>
+          </div>
+          <div id="sale-fields">
+            <hr style="border:none;border-top:1px solid var(--border);margin:14px 0" />
+            <p style="font-size:.76rem;color:var(--discount);font-weight:600;margin-bottom:10px">🏷️ Sale Details</p>
+            <div class="form-grid">
+              <div><label>Original Price (₹) *</label><input type="number" id="f-orig" placeholder="200" min="0"
+                  oninput="calcPrice()" /></div>
+              <div><label>Discount % *</label><input type="number" id="f-disc" placeholder="40" min="1" max="99"
+                  oninput="calcPrice()" /></div>
+              <div class="full">
+                <div class="price-row">
+                  <div class="field"><label>Your UPI ID</label><input type="text" id="f-upi" placeholder="name@upi" />
+                  </div>
+                  <div class="price-preview" id="price-preview">Enter price<br />&amp; %</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn" id="submit-btn" onclick="addFood()">🚀 Post Listing</button>
+        </div>
+      </div>
+
+      <!-- ══ BROWSE TAB ══ -->
+      <div id="tab-browse" class="section active">
+        <div id="setup-notice-browse" class="notice warn" style="display:none"><strong>⚠️ Demo Mode — Supabase not
+            configured.</strong> Showing sample data. Go to ⚙️ Setup.</div>
+        <div class="controls">
+          <input type="text" class="search-box" id="search-box" placeholder="🔍 Search food or location..."
+            oninput="filterCards()" />
+          <select class="filter-select" id="filter-status" onchange="filterCards()">
+            <option value="all">All</option>
+            <option value="available">✅ Available</option>
+            <option value="claimed">📦 Taken</option>
+          </select>
+          <select class="filter-select" id="filter-type" onchange="filterCards()">
+            <option value="all">Free + Deals</option>
+            <option value="free">🆓 Free</option>
+            <option value="sale">🏷️ Deals</option>
+          </select>
+          <button class="refresh-btn" onclick="loadFoods()">🔄</button>
+        </div>
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+        </div>
+        <div id="food-grid" class="food-grid"></div>
+        <div id="empty-browse" class="empty-state" style="display:none">
+          <div class="icon">🍽️</div>
+          <h3>No listings found</h3>
+          <p>Be the first to list food!</p>
+          <button class="btn sc" style="width:auto;margin-top:10px"
+            onclick="switchTab('add',document.querySelectorAll('.tab-btn')[3])">➕ Add Listing</button>
+        </div>
+      </div>
+
+      <!-- ══ DEALS TAB ══ -->
+      <div id="tab-deals" class="section">
+        <div class="deals-strip">
+          <div style="font-size:1.7rem;flex-shrink:0">🏷️</div>
+          <div>
+            <h3>Discount Deals — Buy Before Expiry!</h3>
+            <p>Near-expiry food at heavy discounts. Save money &amp; reduce waste.</p>
+          </div>
+        </div>
+        <div class="loader" id="loader-deals">
+          <div class="spinner"></div>
+        </div>
+        <div id="deals-grid" class="food-grid"></div>
+        <div id="empty-deals" class="empty-state" style="display:none">
+          <div class="icon">🏷️</div>
+          <h3>No deals right now</h3>
+          <p>Post a discounted listing to fill this!</p>
+        </div>
+      </div>
+
+      <!-- ══ ORDERS TAB ══ -->
+      <div id="tab-orders" class="section">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchOrdersView('my',this)">📦 My Orders</button>
+          <button class="inner-tab" onclick="switchOrdersView('seller',this)">🏪 Incoming Orders</button>
+        </div>
+        <div id="view-my">
+          <div class="loader" id="loader-orders">
+            <div class="spinner"></div>
+          </div>
+          <div id="my-orders-list"></div>
+          <div id="empty-my" class="empty-state" style="display:none">
+            <div class="icon">📋</div>
+            <h3>No orders yet</h3>
+            <p>Browse food and place your first order!</p>
+          </div>
+        </div>
+        <div id="view-seller" style="display:none">
+          <div class="loader" id="loader-seller">
+            <div class="spinner"></div>
+          </div>
+          <div id="seller-orders-list"></div>
+          <div id="empty-seller" class="empty-state" style="display:none">
+            <div class="icon">🏪</div>
+            <h3>No incoming orders</h3>
+            <p>Orders placed on your food listings will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- end #app -->
+
+  <!-- ══ ORDER MODAL ══ -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal">
+      <h3 id="om-heading">📋 Place Order</h3>
+      <p id="om-food-title"
+        style="font-family:Syne,sans-serif;font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:1px"></p>
+      <p id="om-food-loc" style="font-size:.78rem;color:var(--muted)"></p>
+      <div id="om-price-block" style="display:none">
+        <div class="modal-price" id="om-price">₹0</div>
+      </div>
+      <hr class="modal-divider" />
+      <p style="font-size:.76rem;color:var(--order);font-weight:600;margin-bottom:8px">👤 Your Details</p>
+      <div class="order-form-grid">
+        <div><label>Name *</label><input type="text" id="om-name" placeholder="Ravi Kumar" /></div>
+        <div><label>Phone *</label><input type="tel" id="om-phone" placeholder="9876543210" /></div>
+        <div><label>Email</label><input type="email" id="om-email" placeholder="ravi@email.com" /></div>
+        <div><label>Pickup Address</label><input type="text" id="om-address" placeholder="Sector 4, Civil Lines" />
+        </div>
+        <div><label>Quantity needed</label><input type="text" id="om-qty" placeholder="2 plates" /></div>
+        <div><label>Message to seller</label><textarea id="om-msg" placeholder="I'll pick up at 6 PM..."
+            style="min-height:52px"></textarea></div>
+      </div>
+      <div id="om-upi-note"
+        style="display:none;margin-top:9px;background:rgba(191,145,243,.1);border-radius:7px;padding:9px;font-size:.74rem;color:var(--text)">
+        💳 Pay to UPI: <strong id="om-upi-id" style="color:var(--discount)"></strong><br />Show payment screenshot to
+        seller on pickup.
+      </div>
+      <div class="modal-actions">
+        <button class="mca" onclick="closeOrderModal()">Cancel</button>
+        <button class="mc ord" id="om-submit" onclick="submitOrder()">✅ Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ACK MODAL ══ -->
+  <div class="modal-overlay" id="ack-modal">
+    <div class="modal" style="text-align:center">
+      <div style="font-size:2.8rem;margin-bottom:7px" id="ack-icon">✅</div>
+      <h3 id="ack-heading">Order Placed!</h3>
+      <div style="background:var(--surface2);border-radius:9px;padding:14px;margin:12px 0;text-align:left">
+        <p style="font-size:.72rem;color:var(--muted);margin-bottom:3px">ORDER ID</p>
+        <p id="ack-order-id"
+          style="font-family:monospace;color:var(--order);font-size:.88rem;font-weight:700;word-break:break-all"></p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:9px 0" />
+        <div style="font-size:.8rem;display:flex;flex-direction:column;gap:5px" id="ack-details"></div>
+      </div>
+      <p id="ack-msg" style="font-size:.8rem;color:var(--muted)"></p>
+      <div class="modal-actions" style="margin-top:13px">
+        <button class="mc" onclick="closeAckModal()">Got it! 👍</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="script.js">
+  </script>
+</body>
+
+</html>
