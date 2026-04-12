@@ -140,7 +140,7 @@ body {
 .auth-form {
     display: none;
     flex-direction: column;
-    gap: 13px
+    gap: 1px
 }
 
 .auth-form.show {
